@@ -112,18 +112,19 @@ export const analyzeReport = createServerFn({ method: "POST" })
         explanation?: string;
       };
 
-      const update: Record<string, unknown> = {
-        ai_status: "done",
-        explanation: parsed.explanation ?? null,
-        extracted: parsed.extracted ?? null,
-      };
-      if (parsed.title) update.title = parsed.title;
-      if (parsed.report_type) update.report_type = parsed.report_type;
-      if (parsed.extracted?.hospital) update.hospital = parsed.extracted.hospital;
-      if (parsed.extracted?.doctor) update.doctor = parsed.extracted.doctor;
-      if (parsed.extracted?.report_date) update.report_date = parsed.extracted.report_date;
-
-      await supabase.from("reports").update(update).eq("id", report.id);
+      await supabase
+        .from("reports")
+        .update({
+          ai_status: "done",
+          explanation: parsed.explanation ?? null,
+          extracted: (parsed.extracted ?? null) as never,
+          ...(parsed.title ? { title: parsed.title } : {}),
+          ...(parsed.report_type ? { report_type: parsed.report_type as never } : {}),
+          ...(parsed.extracted?.hospital ? { hospital: parsed.extracted.hospital } : {}),
+          ...(parsed.extracted?.doctor ? { doctor: parsed.extracted.doctor } : {}),
+          ...(parsed.extracted?.report_date ? { report_date: parsed.extracted.report_date } : {}),
+        })
+        .eq("id", report.id);
       return { ok: true };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
