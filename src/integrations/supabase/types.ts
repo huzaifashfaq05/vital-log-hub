@@ -14,7 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          ai_error: string | null
+          ai_status: string
+          created_at: string
+          doctor: string | null
+          explanation: string | null
+          extracted: Json | null
+          file_mime: string
+          file_path: string
+          file_size: number | null
+          hospital: string | null
+          id: string
+          report_date: string | null
+          report_type: Database["public"]["Enums"]["report_type"]
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_error?: string | null
+          ai_status?: string
+          created_at?: string
+          doctor?: string | null
+          explanation?: string | null
+          extracted?: Json | null
+          file_mime: string
+          file_path: string
+          file_size?: number | null
+          hospital?: string | null
+          id?: string
+          report_date?: string | null
+          report_type?: Database["public"]["Enums"]["report_type"]
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_error?: string | null
+          ai_status?: string
+          created_at?: string
+          doctor?: string | null
+          explanation?: string | null
+          extracted?: Json | null
+          file_mime?: string
+          file_path?: string
+          file_size?: number | null
+          hospital?: string | null
+          id?: string
+          report_date?: string | null
+          report_type?: Database["public"]["Enums"]["report_type"]
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +103,25 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      report_type:
+        | "blood_test"
+        | "x_ray"
+        | "mri"
+        | "ct_scan"
+        | "ultrasound"
+        | "ecg"
+        | "echo"
+        | "prescription"
+        | "discharge_summary"
+        | "vaccination"
+        | "pathology"
+        | "dental"
+        | "eye"
+        | "pet_scan"
+        | "tmt"
+        | "spirometry"
+        | "medical_bill"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +248,27 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      report_type: [
+        "blood_test",
+        "x_ray",
+        "mri",
+        "ct_scan",
+        "ultrasound",
+        "ecg",
+        "echo",
+        "prescription",
+        "discharge_summary",
+        "vaccination",
+        "pathology",
+        "dental",
+        "eye",
+        "pet_scan",
+        "tmt",
+        "spirometry",
+        "medical_bill",
+        "other",
+      ],
+    },
   },
 } as const
