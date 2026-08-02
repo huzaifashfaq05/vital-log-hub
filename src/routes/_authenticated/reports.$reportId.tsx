@@ -7,6 +7,16 @@ import { analyzeReport } from "@/lib/reports.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/reports/$reportId")({
+  head: () => ({
+    meta: [
+      { title: "Radiology Report | MedVault AI" },
+      { name: "description", content: "Review structured findings, impression, confidence, and recommendations for your medical report." },
+      { property: "og:title", content: "Radiology Report | MedVault AI" },
+      { property: "og:description", content: "Private structured AI-assisted radiology report." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: ReportDetail,
 });
 
@@ -118,8 +128,13 @@ function ReportDetail() {
   async function handleDelete() {
     if (!report) return;
     if (!confirm("Delete this report from your vault? This cannot be undone.")) return;
-    await supabase.storage.from("medical-reports").remove([report.file_path]);
-    await supabase.from("reports").delete().eq("id", report.id);
+    const { error: deleteError } = await supabase.from("reports").delete().eq("id", report.id);
+    if (deleteError) {
+      toast.error("The report could not be deleted.");
+      return;
+    }
+    const { error: storageError } = await supabase.storage.from("medical-reports").remove([report.file_path]);
+    if (storageError) toast.warning("Report deleted, but file cleanup needs attention.");
     toast.success("Deleted");
     router.navigate({ to: "/dashboard" });
   }

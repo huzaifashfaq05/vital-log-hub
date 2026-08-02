@@ -6,6 +6,16 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
+  head: () => ({
+    meta: [
+      { title: "Sign in | MedVault AI" },
+      { name: "description", content: "Sign in securely to access your private medical scans and AI-generated reports." },
+      { property: "og:title", content: "Sign in | MedVault AI" },
+      { property: "og:description", content: "Access your private MedVault AI medical report workspace." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   beforeLoad: async () => {
     const { data } = await supabase.auth.getUser();
     if (data.user) throw redirect({ to: "/dashboard" });
@@ -28,7 +38,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin + "/dashboard" },
+          options: { emailRedirectTo: window.location.origin + "/auth" },
         });
         if (error) throw error;
         toast.success("Check your email to confirm, then sign in.");
@@ -48,7 +58,7 @@ function AuthPage() {
   async function handleGoogle() {
     setLoading(true);
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: window.location.origin + "/auth",
     });
     if (result.error) {
       toast.error("Google sign-in failed");

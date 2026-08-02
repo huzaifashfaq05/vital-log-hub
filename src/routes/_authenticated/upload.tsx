@@ -6,6 +6,16 @@ import { analyzeReport } from "@/lib/reports.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/upload")({
+  head: () => ({
+    meta: [
+      { title: "Upload Medical Image | MedVault AI" },
+      { name: "description", content: "Upload a medical image or report for private AI-assisted interpretation." },
+      { property: "og:title", content: "Upload Medical Image | MedVault AI" },
+      { property: "og:description", content: "Add a scan or medical report to your private MedVault AI workspace." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: UploadPage,
 });
 
@@ -49,7 +59,10 @@ function UploadPage() {
         })
         .select("id")
         .single();
-      if (ierr || !inserted) throw ierr ?? new Error("Insert failed");
+      if (ierr || !inserted) {
+        await supabase.storage.from("medical-reports").remove([path]);
+        throw ierr ?? new Error("Insert failed");
+      }
 
       toast.success("Uploaded. Analyzing with AI…");
       router.navigate({ to: "/reports/$reportId", params: { reportId: inserted.id } });

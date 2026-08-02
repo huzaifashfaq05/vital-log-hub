@@ -3,6 +3,16 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
+  head: () => ({
+    meta: [
+      { title: "Medical Report Dashboard | MedVault AI" },
+      { name: "description", content: "View all previous scans, diagnoses, findings, and AI-assisted medical reports in one private dashboard." },
+      { property: "og:title", content: "Medical Report Dashboard | MedVault AI" },
+      { property: "og:description", content: "Your private history of scans and AI-assisted medical reports." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Dashboard,
 });
 
@@ -15,6 +25,11 @@ type Report = {
   report_date: string | null;
   file_mime: string;
   explanation: string | null;
+  extracted: {
+    impression?: string | null;
+    severity?: string | null;
+    pathologies?: Array<{ name: string; severity?: string | null }>;
+  } | null;
   ai_status: string;
   created_at: string;
 };
@@ -22,9 +37,8 @@ type Report = {
 async function fetchReports(): Promise<Report[]> {
   const { data, error } = await supabase
     .from("reports")
-    .select("id, title, report_type, hospital, doctor, report_date, file_mime, explanation, ai_status, created_at")
-    .order("created_at", { ascending: false })
-    .limit(30);
+    .select("id, title, report_type, hospital, doctor, report_date, file_mime, explanation, extracted, ai_status, created_at")
+    .order("created_at", { ascending: false });
   if (error) throw error;
   return data as Report[];
 }
@@ -32,11 +46,11 @@ async function fetchReports(): Promise<Report[]> {
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 function fmtShort(d: string | null) {
   if (!d) return "—";
-  const dt = new Date(d);
+  const dt = /^\d{4}-\d{2}-\d{2}$/.test(d) ? new Date(`${d}T12:00:00`) : new Date(d);
   return `${MONTHS[dt.getMonth()]} ${String(dt.getDate()).padStart(2, "0")} '${String(dt.getFullYear()).slice(2)}`;
 }
 function fmtMonth(d: string) {
-  const dt = new Date(d);
+  const dt = /^\d{4}-\d{2}-\d{2}$/.test(d) ? new Date(`${d}T12:00:00`) : new Date(d);
   return `${MONTHS[dt.getMonth()]} ${dt.getFullYear()}`;
 }
 function extBadge(mime: string) {
@@ -45,11 +59,17 @@ function extBadge(mime: string) {
   return "DOC";
 }
 
+function diagnosisSummary(report: Report) {
+  const names = report.extracted?.pathologies?.map((pathology) => pathology.name).filter(Boolean);
+  if (names && names.length > 0) return names.slice(0, 3).join(" · ");
+  return report.extracted?.impression ?? (report.ai_status === "processing" ? "Analysis in progress" : "No diagnosis recorded");
+}
+
 function Dashboard() {
-  const { data: reports, isLoading } = useQuery({ queryKey: ["reports"], queryFn: fetchReports });
+  const { data: reports, isLoading, error } = useQuery({ queryKey: ["reports"], queryFn: fetchReports });
 
   const latest = reports?.find((r) => r.explanation && r.ai_status === "done");
-  const recent = reports?.slice(0, 5) ?? [];
+  const recent = reports ?? [];
   const timeline = reports?.slice(0, 6) ?? [];
 
   return (
@@ -106,10 +126,18 @@ function Dashboard() {
 
         {/* RECENT */}
         <section className="animate-entrance" style={{ animationDelay: "100ms" }}>
-          <header className="mb-6">
-            <h2 className="label-mono">(02) Recent Documents</h2>
+          <header className="mb-6 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="label-mono">(02) Scan & Report History</h2>
+              <p className="mt-2 text-sm text-muted-foreground">All previous uploads and their latest diagnostic result.</p>
+            </div>
+            <span className="label-mono">{recent.length} total</span>
           </header>
-          {recent.length === 0 ? (
+          {error ? (
+            <div className="border border-destructive/20 bg-destructive/5 p-5 text-sm text-destructive">
+              Your report history could not be loaded. Refresh the page to try again.
+            </div>
+          ) : recent.length === 0 ? (
             <p className="text-sm text-muted-foreground italic">No documents yet.</p>
           ) : (
             <div className="divide-y divide-border border-t border-b border-border">
@@ -118,15 +146,20 @@ function Dashboard() {
                   key={r.id}
                   to="/reports/$reportId"
                   params={{ reportId: r.id }}
-                  className="group grid grid-cols-12 py-4 items-center hover:bg-white/50 transition-colors cursor-pointer"
+                  className="group grid grid-cols-12 gap-x-3 gap-y-2 py-5 items-center hover:bg-card/70 transition-colors cursor-pointer"
                 >
                   <div className="col-span-3 sm:col-span-2 label-mono">{fmtShort(r.report_date ?? r.created_at)}</div>
-                  <div className="col-span-6 font-medium truncate pr-2">{r.title}</div>
-                  <div className="hidden sm:block col-span-3 text-xs text-muted-foreground truncate">{r.hospital ?? "—"}</div>
-                  <div className="col-span-3 sm:col-span-1 text-right">
+                  <div className="col-span-7 sm:col-span-8 min-w-0">
+                    <p className="font-medium truncate">{r.title}</p>
+                    <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{diagnosisSummary(r)}</p>
+                  </div>
+                  <div className="col-span-2 text-right">
                     <span className="text-xs font-mono px-2 py-0.5 border border-border rounded">
                       {r.ai_status === "processing" ? "…" : extBadge(r.file_mime)}
                     </span>
+                    {r.extracted?.severity && (
+                      <p className="mt-2 label-mono">{r.extracted.severity}</p>
+                    )}
                   </div>
                 </Link>
               ))}
