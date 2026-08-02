@@ -59,7 +59,10 @@ function UploadPage() {
         })
         .select("id")
         .single();
-      if (ierr || !inserted) throw ierr ?? new Error("Insert failed");
+      if (ierr || !inserted) {
+        await supabase.storage.from("medical-reports").remove([path]);
+        throw ierr ?? new Error("Insert failed");
+      }
 
       toast.success("Uploaded. Analyzing with AI…");
       router.navigate({ to: "/reports/$reportId", params: { reportId: inserted.id } });

@@ -128,8 +128,13 @@ function ReportDetail() {
   async function handleDelete() {
     if (!report) return;
     if (!confirm("Delete this report from your vault? This cannot be undone.")) return;
-    await supabase.storage.from("medical-reports").remove([report.file_path]);
-    await supabase.from("reports").delete().eq("id", report.id);
+    const { error: deleteError } = await supabase.from("reports").delete().eq("id", report.id);
+    if (deleteError) {
+      toast.error("The report could not be deleted.");
+      return;
+    }
+    const { error: storageError } = await supabase.storage.from("medical-reports").remove([report.file_path]);
+    if (storageError) toast.warning("Report deleted, but file cleanup needs attention.");
     toast.success("Deleted");
     router.navigate({ to: "/dashboard" });
   }

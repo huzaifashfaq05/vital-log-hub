@@ -46,11 +46,11 @@ async function fetchReports(): Promise<Report[]> {
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 function fmtShort(d: string | null) {
   if (!d) return "—";
-  const dt = new Date(d);
+  const dt = /^\d{4}-\d{2}-\d{2}$/.test(d) ? new Date(`${d}T12:00:00`) : new Date(d);
   return `${MONTHS[dt.getMonth()]} ${String(dt.getDate()).padStart(2, "0")} '${String(dt.getFullYear()).slice(2)}`;
 }
 function fmtMonth(d: string) {
-  const dt = new Date(d);
+  const dt = /^\d{4}-\d{2}-\d{2}$/.test(d) ? new Date(`${d}T12:00:00`) : new Date(d);
   return `${MONTHS[dt.getMonth()]} ${dt.getFullYear()}`;
 }
 function extBadge(mime: string) {
