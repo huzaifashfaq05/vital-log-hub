@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { AnalyzeInput, RADIOLOGY_SYSTEM_PROMPT, type Extracted } from "./reports.server";
+import { AnalyzeInput, RADIOLOGY_SYSTEM_PROMPT, type Extracted } from "./reports.helpers";
 
 export const analyzeReport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
