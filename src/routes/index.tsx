@@ -3,6 +3,16 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   ssr: false,
+  head: () => ({
+    meta: [
+      { title: "MedVault AI | Medical Image Reports" },
+      { name: "description", content: "Upload medical images and receive structured, AI-assisted radiology reports in a private health vault." },
+      { property: "og:title", content: "MedVault AI | Medical Image Reports" },
+      { property: "og:description", content: "Private AI-assisted medical image interpretation and report history." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   beforeLoad: async () => {
     const { data } = await supabase.auth.getUser();
     if (data.user) throw redirect({ to: "/dashboard" });

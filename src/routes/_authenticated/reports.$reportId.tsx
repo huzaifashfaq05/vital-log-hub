@@ -7,6 +7,16 @@ import { analyzeReport } from "@/lib/reports.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/reports/$reportId")({
+  head: () => ({
+    meta: [
+      { title: "Radiology Report | MedVault AI" },
+      { name: "description", content: "Review structured findings, impression, confidence, and recommendations for your medical report." },
+      { property: "og:title", content: "Radiology Report | MedVault AI" },
+      { property: "og:description", content: "Private structured AI-assisted radiology report." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: ReportDetail,
 });
 
