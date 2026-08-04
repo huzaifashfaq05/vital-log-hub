@@ -186,6 +186,34 @@ function ReportDetail() {
           )}
         </div>
 
+        {isDicom && (
+          fileUrl ? (
+            <ClientOnly
+              fallback={
+                <div className="h-[420px] bg-card ring-1 ring-black/5 rounded-sm grid place-items-center label-mono">
+                  Preparing DICOM viewer…
+                </div>
+              }
+            >
+              <Suspense
+                fallback={
+                  <div className="h-[420px] bg-card ring-1 ring-black/5 rounded-sm grid place-items-center label-mono">
+                    Loading DICOM viewer…
+                  </div>
+                }
+              >
+                <DicomViewer url={fileUrl} fileName={report.title} />
+              </Suspense>
+            </ClientOnly>
+          ) : (
+            <div className="h-[420px] bg-card ring-1 ring-black/5 rounded-sm grid place-items-center label-mono">
+              Loading study…
+            </div>
+          )
+        )}
+
+
+
         {report.ai_status === "processing" && (
           <section className="p-8 bg-card ring-1 ring-black/5 rounded-sm">
             <p className="label-mono mb-2">AI Radiologist</p>
