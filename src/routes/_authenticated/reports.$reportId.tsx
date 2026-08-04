@@ -434,7 +434,12 @@ function ReportDetail() {
                   className="w-full h-96 rounded-sm border border-border"
                 />
               )}
-              {!isImage && !isPdf && (
+              {isDicom && (
+                <p className="text-xs text-muted-foreground italic">
+                  DICOM study — inspect slices, zoom, and window/level in the viewer above.
+                </p>
+              )}
+              {!isImage && !isPdf && !isDicom && (
                 <p className="text-xs text-muted-foreground italic">Preview not available.</p>
               )}
               <a
