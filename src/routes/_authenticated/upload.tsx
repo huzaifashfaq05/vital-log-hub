@@ -19,7 +19,8 @@ export const Route = createFileRoute("/_authenticated/upload")({
   component: UploadPage,
 });
 
-const ACCEPT = ".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png";
+const ACCEPT =
+  ".pdf,.jpg,.jpeg,.png,.dcm,.dicom,application/pdf,image/jpeg,image/png,application/dicom";
 const MAX_BYTES = 20 * 1024 * 1024;
 
 function UploadPage() {
@@ -83,7 +84,7 @@ function UploadPage() {
       <p className="label-mono">(New) Add to your vault</p>
       <h1 className="mt-3 font-serif italic text-4xl">Upload a medical report</h1>
       <p className="mt-3 text-sm text-muted-foreground max-w-[55ch]">
-        PDFs, X-rays, prescriptions, or lab results. We&apos;ll extract the key fields and
+        PDFs, DICOM studies, X-rays, prescriptions, or lab results. We&apos;ll extract the key fields and
         write a short plain-language explanation.
       </p>
 
@@ -113,7 +114,7 @@ function UploadPage() {
           {file ? file.name : "Click to browse, or drop a file here"}
         </p>
         <p className="text-xs text-muted-foreground mt-1">
-          PDF, JPG, PNG · up to 20MB
+          PDF, JPG, PNG, DICOM (.dcm) · up to 20MB
         </p>
       </label>
 

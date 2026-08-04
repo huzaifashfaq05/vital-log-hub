@@ -1,10 +1,12 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter, ClientOnly } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { analyzeReport } from "@/lib/reports.functions";
 import { toast } from "sonner";
+
+const DicomViewer = lazy(() => import("@/components/DicomViewer"));
 
 export const Route = createFileRoute("/_authenticated/reports/$reportId")({
   head: () => ({
@@ -155,7 +157,11 @@ function ReportDetail() {
   }
 
   const ext = report.extracted;
-  const isImage = report.file_mime.startsWith("image/");
+  const isDicom =
+    report.file_mime === "application/dicom" ||
+    report.file_mime === "application/dicom+json" ||
+    /\.(dcm|dicom)$/i.test(report.file_path);
+  const isImage = !isDicom && report.file_mime.startsWith("image/");
   const isPdf = report.file_mime.includes("pdf");
   const overallConfidence = pct(ext?.confidence_score);
 
@@ -179,6 +185,34 @@ function ReportDetail() {
             </p>
           )}
         </div>
+
+        {isDicom && (
+          fileUrl ? (
+            <ClientOnly
+              fallback={
+                <div className="h-[420px] bg-card ring-1 ring-black/5 rounded-sm grid place-items-center label-mono">
+                  Preparing DICOM viewer…
+                </div>
+              }
+            >
+              <Suspense
+                fallback={
+                  <div className="h-[420px] bg-card ring-1 ring-black/5 rounded-sm grid place-items-center label-mono">
+                    Loading DICOM viewer…
+                  </div>
+                }
+              >
+                <DicomViewer url={fileUrl} fileName={report.title} />
+              </Suspense>
+            </ClientOnly>
+          ) : (
+            <div className="h-[420px] bg-card ring-1 ring-black/5 rounded-sm grid place-items-center label-mono">
+              Loading study…
+            </div>
+          )
+        )}
+
+
 
         {report.ai_status === "processing" && (
           <section className="p-8 bg-card ring-1 ring-black/5 rounded-sm">
@@ -400,7 +434,12 @@ function ReportDetail() {
                   className="w-full h-96 rounded-sm border border-border"
                 />
               )}
-              {!isImage && !isPdf && (
+              {isDicom && (
+                <p className="text-xs text-muted-foreground italic">
+                  DICOM study — inspect slices, zoom, and window/level in the viewer above.
+                </p>
+              )}
+              {!isImage && !isPdf && !isDicom && (
                 <p className="text-xs text-muted-foreground italic">Preview not available.</p>
               )}
               <a
