@@ -157,7 +157,11 @@ function ReportDetail() {
   }
 
   const ext = report.extracted;
-  const isImage = report.file_mime.startsWith("image/");
+  const isDicom =
+    report.file_mime === "application/dicom" ||
+    report.file_mime === "application/dicom+json" ||
+    /\.(dcm|dicom)$/i.test(report.file_path);
+  const isImage = !isDicom && report.file_mime.startsWith("image/");
   const isPdf = report.file_mime.includes("pdf");
   const overallConfidence = pct(ext?.confidence_score);
 
