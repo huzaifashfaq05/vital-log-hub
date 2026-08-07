@@ -120,6 +120,30 @@ function UploadPage() {
         </p>
       </label>
 
+      <section className="mt-10 p-6 bg-card ring-1 ring-black/5 rounded-sm">
+        <label htmlFor="clinical-history" className="label-mono">
+          Patient history <span className="normal-case">(optional)</span>
+        </label>
+        <p className="mt-2 text-xs text-muted-foreground max-w-[60ch]">
+          Symptoms, duration, injury or trauma, known conditions, medications, prior surgeries,
+          age and sex. The AI radiologist uses this clinical context when reading the image.
+        </p>
+        <textarea
+          id="clinical-history"
+          value={history}
+          onChange={(e) => setHistory(e.target.value)}
+          maxLength={2000}
+          rows={5}
+          placeholder="e.g. 34-year-old male, fall from bike 3 days ago, pain and swelling over left wrist, unable to bear weight. No prior fractures."
+          className="mt-4 w-full resize-y rounded-sm border border-border bg-background/60 p-3 text-sm leading-relaxed outline-none focus:border-primary transition-colors"
+        />
+        <p className="mt-2 text-right text-[10px] font-mono text-muted-foreground">
+          {history.length}/2000
+        </p>
+      </section>
+
+
+
       <div className="mt-8 flex items-center gap-4">
         <button
           onClick={handleUpload}
