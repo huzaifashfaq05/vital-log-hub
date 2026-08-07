@@ -54,7 +54,7 @@ type Extracted = {
 async function fetchReport(id: string) {
   const { data, error } = await supabase
     .from("reports")
-    .select("id, title, report_type, hospital, doctor, report_date, file_path, file_mime, explanation, extracted, ai_status, ai_error, created_at")
+    .select("id, title, report_type, hospital, doctor, report_date, file_path, file_mime, explanation, extracted, clinical_history, ai_status, ai_error, created_at")
     .eq("id", id)
     .single();
   if (error) throw error;
@@ -69,6 +69,7 @@ async function fetchReport(id: string) {
     file_mime: string;
     explanation: string | null;
     extracted: Extracted | null;
+    clinical_history: string | null;
     ai_status: string;
     ai_error: string | null;
     created_at: string;
@@ -213,6 +214,13 @@ function ReportDetail() {
         )}
 
 
+
+        {report.clinical_history && (
+          <section className="p-8 bg-card ring-1 ring-black/5 rounded-sm">
+            <h2 className="label-mono mb-3">Clinical history</h2>
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">{report.clinical_history}</p>
+          </section>
+        )}
 
         {report.ai_status === "processing" && (
           <section className="p-8 bg-card ring-1 ring-black/5 rounded-sm">
