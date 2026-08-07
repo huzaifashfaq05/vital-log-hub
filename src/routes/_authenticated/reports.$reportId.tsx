@@ -110,6 +110,8 @@ function ReportDetail() {
   const router = useRouter();
   const analyze = useServerFn(analyzeReport);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [pdfBusy, setPdfBusy] = useState(false);
+
 
   const { data: report, refetch } = useQuery({
     queryKey: ["report", reportId],
