@@ -153,6 +153,42 @@ function ReportDetail() {
     }
   }
 
+  async function handleDownloadPdf() {
+    if (!report) return;
+    setPdfBusy(true);
+    try {
+      const { generateReportPdf } = await import("@/lib/report-pdf");
+      let imageDataUrl: string | null = null;
+      if (fileUrl && report.file_mime.startsWith("image/")) {
+        try {
+          const res = await fetch(fileUrl);
+          const blob = await res.blob();
+          imageDataUrl = await new Promise<string>((resolve, reject) => {
+            const fr = new FileReader();
+            fr.onload = () => resolve(String(fr.result));
+            fr.onerror = reject;
+            fr.readAsDataURL(blob);
+          });
+        } catch {
+          imageDataUrl = null;
+        }
+      }
+      const blob = await generateReportPdf(report, { imageDataUrl });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `MedVault-AI-${report.title.replace(/[^\w-]+/g, "-")}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Report downloaded");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not build the PDF");
+    } finally {
+      setPdfBusy(false);
+    }
+  }
+
+
   if (!report) {
     return <main className="max-w-6xl mx-auto px-6 py-12 label-mono">Loading…</main>;
   }
