@@ -28,6 +28,7 @@ function UploadPage() {
   const { user } = Route.useRouteContext();
   const analyze = useServerFn(analyzeReport);
   const [file, setFile] = useState<File | null>(null);
+  const [history, setHistory] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
 
