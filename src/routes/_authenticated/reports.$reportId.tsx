@@ -505,6 +505,16 @@ function ReportDetail() {
         <div className="p-6 bg-accent/5 ring-1 ring-accent/10 rounded-sm">
           <h4 className="label-mono text-accent">Report actions</h4>
           <div className="mt-4 space-y-2 text-sm">
+            {report.ai_status === "done" && (
+              <button
+                onClick={handleDownloadPdf}
+                disabled={pdfBusy}
+                className="block label-mono hover:text-foreground transition-colors disabled:opacity-50"
+              >
+                {pdfBusy ? "→ Preparing PDF…" : "→ Download PDF report"}
+              </button>
+            )}
+
             <button
               onClick={handleReanalyze}
               className="block label-mono hover:text-foreground transition-colors"
