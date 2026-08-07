@@ -110,6 +110,8 @@ function ReportDetail() {
   const router = useRouter();
   const analyze = useServerFn(analyzeReport);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [pdfBusy, setPdfBusy] = useState(false);
+
 
   const { data: report, refetch } = useQuery({
     queryKey: ["report", reportId],
@@ -152,6 +154,42 @@ function ReportDetail() {
       toast.error(e instanceof Error ? e.message : "Failed");
     }
   }
+
+  async function handleDownloadPdf() {
+    if (!report) return;
+    setPdfBusy(true);
+    try {
+      const { generateReportPdf } = await import("@/lib/report-pdf");
+      let imageDataUrl: string | null = null;
+      if (fileUrl && report.file_mime.startsWith("image/")) {
+        try {
+          const res = await fetch(fileUrl);
+          const blob = await res.blob();
+          imageDataUrl = await new Promise<string>((resolve, reject) => {
+            const fr = new FileReader();
+            fr.onload = () => resolve(String(fr.result));
+            fr.onerror = reject;
+            fr.readAsDataURL(blob);
+          });
+        } catch {
+          imageDataUrl = null;
+        }
+      }
+      const blob = await generateReportPdf(report, { imageDataUrl });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `MedVault-AI-${report.title.replace(/[^\w-]+/g, "-")}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Report downloaded");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not build the PDF");
+    } finally {
+      setPdfBusy(false);
+    }
+  }
+
 
   if (!report) {
     return <main className="max-w-6xl mx-auto px-6 py-12 label-mono">Loading…</main>;
@@ -467,6 +505,16 @@ function ReportDetail() {
         <div className="p-6 bg-accent/5 ring-1 ring-accent/10 rounded-sm">
           <h4 className="label-mono text-accent">Report actions</h4>
           <div className="mt-4 space-y-2 text-sm">
+            {report.ai_status === "done" && (
+              <button
+                onClick={handleDownloadPdf}
+                disabled={pdfBusy}
+                className="block label-mono hover:text-foreground transition-colors disabled:opacity-50"
+              >
+                {pdfBusy ? "→ Preparing PDF…" : "→ Download PDF report"}
+              </button>
+            )}
+
             <button
               onClick={handleReanalyze}
               className="block label-mono hover:text-foreground transition-colors"
