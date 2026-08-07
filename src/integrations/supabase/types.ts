@@ -42,6 +42,7 @@ export type Database = {
         Row: {
           ai_error: string | null
           ai_status: string
+          clinical_history: string | null
           created_at: string
           doctor: string | null
           explanation: string | null
@@ -60,6 +61,7 @@ export type Database = {
         Insert: {
           ai_error?: string | null
           ai_status?: string
+          clinical_history?: string | null
           created_at?: string
           doctor?: string | null
           explanation?: string | null
@@ -78,6 +80,7 @@ export type Database = {
         Update: {
           ai_error?: string | null
           ai_status?: string
+          clinical_history?: string | null
           created_at?: string
           doctor?: string | null
           explanation?: string | null
