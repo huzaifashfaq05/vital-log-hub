@@ -12,7 +12,7 @@ export const analyzeReport = createServerFn({ method: "POST" })
 
     const { data: report, error: rerr } = await supabase
       .from("reports")
-      .select("id, user_id, file_path, file_mime, title")
+      .select("id, user_id, file_path, file_mime, title, clinical_history")
       .eq("id", data.reportId)
       .single();
     if (rerr || !report) throw new Error("Report not found");
@@ -29,13 +29,19 @@ export const analyzeReport = createServerFn({ method: "POST" })
       const b64 = btoa(bin);
       const mime = report.file_mime || "application/octet-stream";
 
+      const history = (report.clinical_history ?? "").trim();
       const isImage = mime.startsWith("image/");
       const userContent: Array<Record<string, unknown>> = [
         {
           type: "text",
-          text: "Analyze this medical image/document as a radiologist. Identify visible anatomy and any abnormalities (fractures, effusions, masses, consolidations, degenerative changes, stones, etc.). Produce the structured radiology report as strict JSON per the schema. Reply with ONLY the JSON object, no prose, no markdown fences.",
+          text:
+            "Analyze this medical image/document as a radiologist. Identify visible anatomy and any abnormalities (fractures, effusions, masses, consolidations, degenerative changes, stones, etc.). Produce the structured radiology report as strict JSON per the schema. Reply with ONLY the JSON object, no prose, no markdown fences." +
+            (history
+              ? `\n\nPatient clinical history provided by the user (correlate your findings with it, and reflect it in the examination/impression/recommendations where relevant; never treat it as a diagnosis):\n"""\n${history.slice(0, 2000)}\n"""`
+              : ""),
         },
       ];
+
       if (isImage) {
         userContent.push({ type: "image_url", image_url: { url: `data:${mime};base64,${b64}` } });
       } else {
