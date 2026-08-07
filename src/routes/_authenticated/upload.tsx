@@ -57,6 +57,7 @@ function UploadPage() {
           file_path: path,
           file_mime: file.type || "application/octet-stream",
           file_size: file.size,
+          clinical_history: history.trim().slice(0, 2000) || null,
           ai_status: "processing",
         })
         .select("id")
