@@ -70,6 +70,11 @@ async function fetchReport(id: string) {
     explanation: string | null;
     extracted: Extracted | null;
     clinical_history: string | null;
+    patient_name: string | null;
+    patient_age: string | null;
+    patient_sex: string | null;
+    patient_id_ref: string | null;
+    referring_doctor: string | null;
     ai_status: string;
     ai_error: string | null;
     created_at: string;
