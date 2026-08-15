@@ -63,6 +63,11 @@ function UploadPage() {
           file_mime: file.type || "application/octet-stream",
           file_size: file.size,
           clinical_history: history.trim().slice(0, 2000) || null,
+          patient_name: patientName.trim() || null,
+          patient_age: patientAge.trim() || null,
+          patient_sex: patientSex || null,
+          patient_id_ref: patientIdRef.trim() || null,
+          referring_doctor: referringDoctor.trim() || null,
           ai_status: "processing",
         })
         .select("id")
