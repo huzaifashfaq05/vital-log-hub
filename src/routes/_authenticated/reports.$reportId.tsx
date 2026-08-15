@@ -54,7 +54,7 @@ type Extracted = {
 async function fetchReport(id: string) {
   const { data, error } = await supabase
     .from("reports")
-    .select("id, title, report_type, hospital, doctor, report_date, file_path, file_mime, explanation, extracted, clinical_history, ai_status, ai_error, created_at")
+    .select("id, title, report_type, hospital, doctor, report_date, file_path, file_mime, explanation, extracted, clinical_history, patient_name, patient_age, patient_sex, patient_id_ref, referring_doctor, ai_status, ai_error, created_at")
     .eq("id", id)
     .single();
   if (error) throw error;
