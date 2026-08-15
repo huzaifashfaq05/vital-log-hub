@@ -12,7 +12,7 @@ export const analyzeReport = createServerFn({ method: "POST" })
 
     const { data: report, error: rerr } = await supabase
       .from("reports")
-      .select("id, user_id, file_path, file_mime, title, clinical_history")
+      .select("id, user_id, file_path, file_mime, title, clinical_history, patient_name, patient_age, patient_sex, patient_id_ref, referring_doctor")
       .eq("id", data.reportId)
       .single();
     if (rerr || !report) throw new Error("Report not found");
@@ -30,17 +30,30 @@ export const analyzeReport = createServerFn({ method: "POST" })
       const mime = report.file_mime || "application/octet-stream";
 
       const history = (report.clinical_history ?? "").trim();
+      const demographics = [
+        report.patient_name ? `Name: ${report.patient_name}` : null,
+        report.patient_age ? `Age: ${report.patient_age}` : null,
+        report.patient_sex ? `Sex: ${report.patient_sex}` : null,
+        report.patient_id_ref ? `Patient ID: ${report.patient_id_ref}` : null,
+        report.referring_doctor ? `Referring doctor: ${report.referring_doctor}` : null,
+      ]
+        .filter(Boolean)
+        .join("\n");
       const isImage = mime.startsWith("image/");
       const userContent: Array<Record<string, unknown>> = [
         {
           type: "text",
           text:
             "Analyze this medical image/document as a radiologist. Identify visible anatomy and any abnormalities (fractures, effusions, masses, consolidations, degenerative changes, stones, etc.). Produce the structured radiology report as strict JSON per the schema. Reply with ONLY the JSON object, no prose, no markdown fences." +
+            (demographics
+              ? `\n\nPatient demographics provided by the user (use these for patient_name and to adjust age/sex-appropriate interpretation):\n"""\n${demographics}\n"""`
+              : "") +
             (history
               ? `\n\nPatient clinical history provided by the user (correlate your findings with it, and reflect it in the examination/impression/recommendations where relevant; never treat it as a diagnosis):\n"""\n${history.slice(0, 2000)}\n"""`
               : ""),
         },
       ];
+
 
       if (isImage) {
         userContent.push({ type: "image_url", image_url: { url: `data:${mime};base64,${b64}` } });

@@ -52,6 +52,11 @@ export type Database = {
           file_size: number | null
           hospital: string | null
           id: string
+          patient_age: string | null
+          patient_id_ref: string | null
+          patient_name: string | null
+          patient_sex: string | null
+          referring_doctor: string | null
           report_date: string | null
           report_type: Database["public"]["Enums"]["report_type"]
           title: string
@@ -71,6 +76,11 @@ export type Database = {
           file_size?: number | null
           hospital?: string | null
           id?: string
+          patient_age?: string | null
+          patient_id_ref?: string | null
+          patient_name?: string | null
+          patient_sex?: string | null
+          referring_doctor?: string | null
           report_date?: string | null
           report_type?: Database["public"]["Enums"]["report_type"]
           title: string
@@ -90,6 +100,11 @@ export type Database = {
           file_size?: number | null
           hospital?: string | null
           id?: string
+          patient_age?: string | null
+          patient_id_ref?: string | null
+          patient_name?: string | null
+          patient_sex?: string | null
+          referring_doctor?: string | null
           report_date?: string | null
           report_type?: Database["public"]["Enums"]["report_type"]
           title?: string

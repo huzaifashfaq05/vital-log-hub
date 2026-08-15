@@ -29,6 +29,11 @@ function UploadPage() {
   const analyze = useServerFn(analyzeReport);
   const [file, setFile] = useState<File | null>(null);
   const [history, setHistory] = useState("");
+  const [patientName, setPatientName] = useState("");
+  const [patientAge, setPatientAge] = useState("");
+  const [patientSex, setPatientSex] = useState("");
+  const [patientIdRef, setPatientIdRef] = useState("");
+  const [referringDoctor, setReferringDoctor] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -58,6 +63,11 @@ function UploadPage() {
           file_mime: file.type || "application/octet-stream",
           file_size: file.size,
           clinical_history: history.trim().slice(0, 2000) || null,
+          patient_name: patientName.trim() || null,
+          patient_age: patientAge.trim() || null,
+          patient_sex: patientSex || null,
+          patient_id_ref: patientIdRef.trim() || null,
+          referring_doctor: referringDoctor.trim() || null,
           ai_status: "processing",
         })
         .select("id")
@@ -119,6 +129,78 @@ function UploadPage() {
           PDF, JPG, PNG, DICOM (.dcm) · up to 20MB
         </p>
       </label>
+
+      <section className="mt-10 p-6 bg-card ring-1 ring-black/5 rounded-sm">
+        <p className="label-mono">
+          Patient details <span className="normal-case">(optional)</span>
+        </p>
+        <p className="mt-2 text-xs text-muted-foreground max-w-[60ch]">
+          Appears on the report header and the downloaded PDF letterhead.
+        </p>
+
+        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="patient-name" className="text-xs font-medium">Full name</label>
+            <input
+              id="patient-name"
+              value={patientName}
+              onChange={(e) => setPatientName(e.target.value)}
+              maxLength={120}
+              placeholder="e.g. Aditi Sharma"
+              className="mt-2 w-full rounded-sm border border-border bg-background/60 p-2.5 text-sm outline-none focus:border-primary transition-colors"
+            />
+          </div>
+          <div>
+            <label htmlFor="patient-age" className="text-xs font-medium">Age</label>
+            <input
+              id="patient-age"
+              value={patientAge}
+              onChange={(e) => setPatientAge(e.target.value)}
+              maxLength={20}
+              placeholder="e.g. 34 or 34Y 6M"
+              className="mt-2 w-full rounded-sm border border-border bg-background/60 p-2.5 text-sm outline-none focus:border-primary transition-colors"
+            />
+          </div>
+          <div>
+            <label htmlFor="patient-sex" className="text-xs font-medium">Sex</label>
+            <select
+              id="patient-sex"
+              value={patientSex}
+              onChange={(e) => setPatientSex(e.target.value)}
+              className="mt-2 w-full rounded-sm border border-border bg-background/60 p-2.5 text-sm outline-none focus:border-primary transition-colors"
+            >
+              <option value="">Not specified</option>
+              <option value="Female">Female</option>
+              <option value="Male">Male</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="patient-id" className="text-xs font-medium">Patient ID / MRN</label>
+            <input
+              id="patient-id"
+              value={patientIdRef}
+              onChange={(e) => setPatientIdRef(e.target.value)}
+              maxLength={60}
+              placeholder="e.g. MRN-48219"
+              className="mt-2 w-full rounded-sm border border-border bg-background/60 p-2.5 text-sm outline-none focus:border-primary transition-colors"
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label htmlFor="referring-doctor" className="text-xs font-medium">Referring doctor</label>
+            <input
+              id="referring-doctor"
+              value={referringDoctor}
+              onChange={(e) => setReferringDoctor(e.target.value)}
+              maxLength={120}
+              placeholder="e.g. Dr. R. Menon"
+              className="mt-2 w-full rounded-sm border border-border bg-background/60 p-2.5 text-sm outline-none focus:border-primary transition-colors"
+            />
+          </div>
+        </div>
+      </section>
+
+
 
       <section className="mt-10 p-6 bg-card ring-1 ring-black/5 rounded-sm">
         <label htmlFor="clinical-history" className="label-mono">

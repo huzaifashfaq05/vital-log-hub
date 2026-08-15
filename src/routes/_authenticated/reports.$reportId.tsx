@@ -54,7 +54,7 @@ type Extracted = {
 async function fetchReport(id: string) {
   const { data, error } = await supabase
     .from("reports")
-    .select("id, title, report_type, hospital, doctor, report_date, file_path, file_mime, explanation, extracted, clinical_history, ai_status, ai_error, created_at")
+    .select("id, title, report_type, hospital, doctor, report_date, file_path, file_mime, explanation, extracted, clinical_history, patient_name, patient_age, patient_sex, patient_id_ref, referring_doctor, ai_status, ai_error, created_at")
     .eq("id", id)
     .single();
   if (error) throw error;
@@ -70,6 +70,11 @@ async function fetchReport(id: string) {
     explanation: string | null;
     extracted: Extracted | null;
     clinical_history: string | null;
+    patient_name: string | null;
+    patient_age: string | null;
+    patient_sex: string | null;
+    patient_id_ref: string | null;
+    referring_doctor: string | null;
     ai_status: string;
     ai_error: string | null;
     created_at: string;
@@ -252,6 +257,31 @@ function ReportDetail() {
         )}
 
 
+        {(report.patient_name ||
+          report.patient_age ||
+          report.patient_sex ||
+          report.patient_id_ref ||
+          report.referring_doctor) && (
+          <section className="p-8 bg-card ring-1 ring-black/5 rounded-sm">
+            <h2 className="label-mono mb-4">Patient details</h2>
+            <dl className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
+              {[
+                ["Name", report.patient_name],
+                ["Age", report.patient_age],
+                ["Sex", report.patient_sex],
+                ["Patient ID", report.patient_id_ref],
+                ["Referring doctor", report.referring_doctor],
+              ]
+                .filter(([, v]) => Boolean(v))
+                .map(([k, v]) => (
+                  <div key={k as string} className="flex justify-between gap-4 border-b border-border/60 pb-2">
+                    <dt className="label-mono">{k}</dt>
+                    <dd className="text-sm text-right">{v}</dd>
+                  </div>
+                ))}
+            </dl>
+          </section>
+        )}
 
         {report.clinical_history && (
           <section className="p-8 bg-card ring-1 ring-black/5 rounded-sm">

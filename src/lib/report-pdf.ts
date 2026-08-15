@@ -9,6 +9,11 @@ export type PdfReport = {
   doctor: string | null;
   report_date: string | null;
   clinical_history: string | null;
+  patient_name?: string | null;
+  patient_age?: string | null;
+  patient_sex?: string | null;
+  patient_id_ref?: string | null;
+  referring_doctor?: string | null;
   explanation: string | null;
   extracted: Extracted | null;
   created_at: string;
@@ -142,10 +147,15 @@ export async function generateReportPdf(
 
   const ext = report.extracted;
   const meta: Array<[string, string]> = [
-    ["Patient", ext?.patient_name ?? "—"],
+    ["Patient", report.patient_name ?? ext?.patient_name ?? "—"],
+    [
+      "Age · sex",
+      [report.patient_age, report.patient_sex].filter(Boolean).join(" · ") || "—",
+    ],
+    ["Patient ID", report.patient_id_ref ?? "—"],
     ["Study date", fmtDate(report.report_date ?? report.created_at)],
     ["Facility", report.hospital ?? "—"],
-    ["Referring / reading", report.doctor ?? "—"],
+    ["Referring / reading", report.referring_doctor ?? report.doctor ?? "—"],
     ["Examination", ext?.examination ?? "—"],
     ["Technique", ext?.technique ?? "—"],
     ["Image quality", ext?.image_quality ?? "—"],
