@@ -12,7 +12,7 @@ export const analyzeReport = createServerFn({ method: "POST" })
 
     const { data: report, error: rerr } = await supabase
       .from("reports")
-      .select("id, user_id, file_path, file_mime, title, clinical_history")
+      .select("id, user_id, file_path, file_mime, title, clinical_history, patient_name, patient_age, patient_sex, patient_id_ref, referring_doctor")
       .eq("id", data.reportId)
       .single();
     if (rerr || !report) throw new Error("Report not found");
