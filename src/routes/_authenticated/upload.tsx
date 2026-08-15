@@ -29,6 +29,11 @@ function UploadPage() {
   const analyze = useServerFn(analyzeReport);
   const [file, setFile] = useState<File | null>(null);
   const [history, setHistory] = useState("");
+  const [patientName, setPatientName] = useState("");
+  const [patientAge, setPatientAge] = useState("");
+  const [patientSex, setPatientSex] = useState("");
+  const [patientIdRef, setPatientIdRef] = useState("");
+  const [referringDoctor, setReferringDoctor] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
 
