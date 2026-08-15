@@ -35,14 +35,25 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: window.location.origin + "/auth" },
         });
         if (error) throw error;
-        toast.success("Check your email to confirm, then sign in.");
-        setMode("signin");
+        if (data.session) {
+          toast.success("Vault created.");
+          router.navigate({ to: "/dashboard", replace: true });
+          return;
+        }
+        // No session: try an immediate sign-in (auto-confirm enabled projects)
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInError) {
+          toast.success("Check your email to confirm, then sign in.");
+          setMode("signin");
+          return;
+        }
+        router.navigate({ to: "/dashboard", replace: true });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -54,6 +65,7 @@ function AuthPage() {
       setLoading(false);
     }
   }
+
 
   async function handleGoogle() {
     setLoading(true);
