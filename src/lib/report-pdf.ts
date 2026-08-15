@@ -9,6 +9,11 @@ export type PdfReport = {
   doctor: string | null;
   report_date: string | null;
   clinical_history: string | null;
+  patient_name?: string | null;
+  patient_age?: string | null;
+  patient_sex?: string | null;
+  patient_id_ref?: string | null;
+  referring_doctor?: string | null;
   explanation: string | null;
   extracted: Extracted | null;
   created_at: string;
