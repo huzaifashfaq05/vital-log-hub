@@ -2,13 +2,15 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { AnalyzeInput, RADIOLOGY_SYSTEM_PROMPT, type Extracted } from "./reports.helpers";
 
+const GEMINI_MODEL = "gemini-2.5-pro"; // use "gemini-2.5-flash" for a cheaper/faster option
+
 export const analyzeReport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => AnalyzeInput.parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("Missing LOVABLE_API_KEY");
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("Missing GEMINI_API_KEY");
 
     const { data: report, error: rerr } = await supabase
       .from("reports")
@@ -24,9 +26,7 @@ export const analyzeReport = createServerFn({ method: "POST" })
       const dl = await supabase.storage.from("medical-reports").download(report.file_path);
       if (dl.error || !dl.data) throw new Error("Could not read file");
       const buf = new Uint8Array(await dl.data.arrayBuffer());
-      let bin = "";
-      for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
-      const b64 = btoa(bin);
+      const b64 = Buffer.from(buf).toString("base64");
       const mime = report.file_mime || "application/octet-stream";
 
       const history = (report.clinical_history ?? "").trim();
@@ -39,50 +39,45 @@ export const analyzeReport = createServerFn({ method: "POST" })
       ]
         .filter(Boolean)
         .join("\n");
-      const isImage = mime.startsWith("image/");
-      const userContent: Array<Record<string, unknown>> = [
+
+      const promptText =
+        "Analyze this medical image/document as a radiologist. Identify visible anatomy and any abnormalities (fractures, effusions, masses, consolidations, degenerative changes, stones, etc.). Produce the structured radiology report as strict JSON per the schema. Reply with ONLY the JSON object, no prose, no markdown fences." +
+        (demographics
+          ? `\n\nPatient demographics provided by the user (use these for patient_name and to adjust age/sex-appropriate interpretation):\n"""\n${demographics}\n"""`
+          : "") +
+        (history
+          ? `\n\nPatient clinical history provided by the user (correlate your findings with it, and reflect it in the examination/impression/recommendations where relevant; never treat it as a diagnosis):\n"""\n${history.slice(0, 2000)}\n"""`
+          : "");
+
+      const resp = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
         {
-          type: "text",
-          text:
-            "Analyze this medical image/document as a radiologist. Identify visible anatomy and any abnormalities (fractures, effusions, masses, consolidations, degenerative changes, stones, etc.). Produce the structured radiology report as strict JSON per the schema. Reply with ONLY the JSON object, no prose, no markdown fences." +
-            (demographics
-              ? `\n\nPatient demographics provided by the user (use these for patient_name and to adjust age/sex-appropriate interpretation):\n"""\n${demographics}\n"""`
-              : "") +
-            (history
-              ? `\n\nPatient clinical history provided by the user (correlate your findings with it, and reflect it in the examination/impression/recommendations where relevant; never treat it as a diagnosis):\n"""\n${history.slice(0, 2000)}\n"""`
-              : ""),
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: RADIOLOGY_SYSTEM_PROMPT }] },
+            contents: [
+              {
+                role: "user",
+                parts: [{ text: promptText }, { inlineData: { mimeType: mime, data: b64 } }],
+              },
+            ],
+            generationConfig: { responseMimeType: "application/json" },
+          }),
         },
-      ];
+      );
 
-
-      if (isImage) {
-        userContent.push({ type: "image_url", image_url: { url: `data:${mime};base64,${b64}` } });
-      } else {
-        userContent.push({
-          type: "file",
-          file: { filename: report.title || "report", file_data: `data:${mime};base64,${b64}` },
-        });
-      }
-
-      const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-pro",
-          messages: [
-            { role: "system", content: RADIOLOGY_SYSTEM_PROMPT },
-            { role: "user", content: userContent },
-          ],
-          response_format: { type: "json_object" },
-        }),
-      });
-
-      if (resp.status === 429) throw new Error("Rate limit — please try again shortly.");
-      if (resp.status === 402) throw new Error("AI credits exhausted. Add credits in Settings.");
+      if (resp.status === 429) throw new Error("Rate limit or quota reached — please try again shortly.");
+      if (resp.status === 401 || resp.status === 403) throw new Error("AI key rejected. Check GEMINI_API_KEY.");
       if (!resp.ok) throw new Error(`AI error ${resp.status}: ${await resp.text()}`);
 
-      const json = (await resp.json()) as { choices?: Array<{ message?: { content?: string } }> };
-      const raw = json.choices?.[0]?.message?.content ?? "{}";
+      const json = (await resp.json()) as {
+        candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+      };
+      const raw =
+        json.candidates?.[0]?.content?.parts
+          ?.map((p) => p.text ?? "")
+          .join("") || "{}";
       const cleaned = raw.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
       const parsed = JSON.parse(cleaned) as {
         title?: string;
