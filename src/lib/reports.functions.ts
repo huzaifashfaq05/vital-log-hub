@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { AnalyzeInput, RADIOLOGY_SYSTEM_PROMPT, type Extracted } from "./reports.helpers";
 
-const GEMINI_MODEL = "gemini-2.5-pro"; // use "gemini-2.5-flash" for a cheaper/faster option
+const GEMINI_MODEL = "gemini-3.1-pro-preview";
 
 export const analyzeReport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
